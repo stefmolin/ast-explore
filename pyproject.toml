@@ -33,7 +33,10 @@ urls.Homepage = "https://github.com/stefmolin/ast-explain"
 urls.Source = "https://github.com/stefmolin/ast-explain"
 
 [dependency-groups]
-dev = [ "pre-commit>=4.6.0" ]
+dev = [
+  "mypy>=2.1.0",
+  "pre-commit>=4.6.0",
+]
 
 [tool.ruff]
 line-length = 88
@@ -73,6 +76,11 @@ lint.isort.known-first-party = [
   "ezslides",
 ]
 lint.isort.split-on-trailing-comma = false
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = true
+warn_unused_configs = true
 
 [tool.numpydoc_validation]
 checks = [
