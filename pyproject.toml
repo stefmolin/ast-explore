@@ -31,6 +31,7 @@ dependencies = []
 urls.Documentation = "https://github.com/stefmolin/ast-explain"
 urls.Homepage = "https://github.com/stefmolin/ast-explain"
 urls.Source = "https://github.com/stefmolin/ast-explain"
+scripts.ast-explore = "ast_explain.explore.cli:main"
 
 [dependency-groups]
 dev = [
