@@ -75,4 +75,5 @@ class NodeExplorer(ast.NodeVisitor):
 
     def run(self) -> None:
         """Traverse the AST from the root to the leaves."""
+        print(f'\nAST nodes encountered during depth-first traversal\n{"-" * 64}\n')
         self.visit(self.tree)
