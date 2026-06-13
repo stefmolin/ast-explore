@@ -1,6 +1,7 @@
 """Traverse the AST to provide information on desired nodes."""
 
 import ast
+import itertools
 import os
 from pathlib import Path
 
@@ -19,6 +20,8 @@ class NodeExplorer(ast.NodeVisitor):
         self,
         source_code_file_path: str | os.PathLike[str],
     ) -> None:
+        self._nodes_visited = itertools.count(1)
+
         file_path = Path(source_code_file_path).resolve()
         print(f'Processing {file_path}:')
 
@@ -38,7 +41,7 @@ class NodeExplorer(ast.NodeVisitor):
         node_class = f'ast.{node_name}'
 
         print(
-            f'Encountered {node_class} '
+            f'{next(self._nodes_visited)}. {node_class} '
             f'(https://docs.python.org/3/library/ast.html#{node_class})'
         )
 
