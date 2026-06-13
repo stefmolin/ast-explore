@@ -30,6 +30,15 @@ def get_parser() -> argparse.ArgumentParser:
         help='Source code file to analyze',
     )
 
+    parser.add_argument(
+        '--types',
+        nargs='*',
+        help=(
+            'node types to explain (e.g., --types Try ExceptionHandler). '
+            "If you don't provide any specific types, all will be explained."
+        ),
+    )
+
     return parser
 
 
@@ -44,7 +53,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     """
     args = get_parser().parse_args(argv)
 
-    visitor = NodeExplorer(args.source_code_file_path)
+    visitor = NodeExplorer(args.source_code_file_path, args.types)
     visitor.run()
 
 

@@ -3,6 +3,7 @@
 import ast
 import itertools
 import os
+from collections.abc import Sequence
 from pathlib import Path
 
 
@@ -14,11 +15,17 @@ class NodeExplorer(ast.NodeVisitor):
     ----------
     source_code_file_path : str | os.PathLike[str]
         Path to the Python source code to explore. The code must be valid Python syntax.
+    nodes_to_explore : Sequence[str] | Sequence[ast.AST] | None
+        The types of nodes to explore. When set to ``None``, the traversal will explore
+        each node encountered. Provide a sequence of strings (*e.g.*, ``['Try', 'Assert']``)
+        or :mod:`ast` types (*e.g.*, ``[ast.Try, ast.Assert]``) to only explore specific
+        node types.
     """
 
     def __init__(
         self,
         source_code_file_path: str | os.PathLike[str],
+        nodes_to_explore: Sequence[str] | Sequence[ast.AST] | None,
     ) -> None:
         self._nodes_visited = itertools.count(1)
 
@@ -27,6 +34,8 @@ class NodeExplorer(ast.NodeVisitor):
 
         self._source_code = file_path.read_text()
         self.tree = ast.parse(self._source_code)
+
+        self._nodes_to_explore = nodes_to_explore
 
     def _explore(self, node: ast.AST) -> None:
         """
@@ -38,12 +47,19 @@ class NodeExplorer(ast.NodeVisitor):
             The node to explore.
         """
         node_name = node.__class__.__name__
-        node_class = f'ast.{node_name}'
+        node_class = f'{node.__module__}.{node_name}'
 
-        print(
-            f'{next(self._nodes_visited)}. {node_class} '
-            f'(https://docs.python.org/3/library/ast.html#{node_class})'
+        should_explore = (
+            self._nodes_to_explore is None
+            or node_name in self._nodes_to_explore
+            or node_class in self._nodes_to_explore
         )
+
+        if should_explore:
+            print(
+                f'{next(self._nodes_visited)}. {node_class} '
+                f'(https://docs.python.org/3/library/ast.html#{node_class})'
+            )
 
     def generic_visit(self, node: ast.AST) -> None:
         """
