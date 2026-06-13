@@ -105,16 +105,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = get_parser().parse_args(argv)
 
     try:
-        NodeExplorer(args.source_code_file_path, args.types, args.interactive).run()
-    except KeyboardInterrupt:
-        return 0
-    except SystemExit as exit:
-        return cast('int', exit.code)
+        visitor = NodeExplorer(args.source_code_file_path, args.types, args.interactive)
     except (FileNotFoundError, SyntaxError):
         return 1
     except Exception as exc:
         print(exc)
         return 1
+
+    try:
+        visitor.run()
+    except KeyboardInterrupt:
+        return 0
+    except SystemExit as exit:
+        return cast('int', exit.code)
+    except Exception as exc:
+        print(exc)
+        return 1
+
     return 0
 
 
