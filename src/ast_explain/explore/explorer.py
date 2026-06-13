@@ -34,10 +34,20 @@ class NodeExplorer(ast.NodeVisitor):
         self._nodes_visited = itertools.count(1)
 
         file_path = Path(source_code_file_path).resolve()
+
+        try:
+            self._source_code = file_path.read_text()
+        except FileNotFoundError as exc:
+            print(f'[ERROR] {exc.strerror}: {file_path}')
+            raise
+
         print(f'Processing {file_path}:')
 
-        self._source_code = file_path.read_text()
-        self.tree = ast.parse(self._source_code)
+        try:
+            self.tree = ast.parse(self._source_code)
+        except SyntaxError:
+            print('[ERROR] Input source code is not syntactically-correct')
+            raise
 
         self._nodes_to_explore = nodes_to_explore
         self._interactive = interactive

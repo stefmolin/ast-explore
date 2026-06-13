@@ -3,6 +3,7 @@
 import argparse
 import difflib
 from collections.abc import Sequence
+from typing import cast
 
 from .. import __version__, ast_node_types_generator
 from .explorer import NodeExplorer
@@ -87,7 +88,7 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Sequence[str] | None = None) -> None:
+def main(argv: Sequence[str] | None = None) -> int:
     """
     Explore the AST of a given Python source code module.
 
@@ -95,11 +96,26 @@ def main(argv: Sequence[str] | None = None) -> None:
     ----------
     argv : Sequence[str] | None, optional
         The arguments passed on the command line.
+
+    Returns
+    -------
+    int
+        Exit code for the process. Non-zero exit codes mean something went wrong.
     """
     args = get_parser().parse_args(argv)
 
-    visitor = NodeExplorer(args.source_code_file_path, args.types, args.interactive)
-    visitor.run()
+    try:
+        NodeExplorer(args.source_code_file_path, args.types, args.interactive).run()
+    except KeyboardInterrupt:
+        return 0
+    except SystemExit as exit:
+        return cast('int', exit.code)
+    except (FileNotFoundError, SyntaxError):
+        return 1
+    except Exception as exc:
+        print(exc)
+        return 1
+    return 0
 
 
 if __name__ == '__main__':
