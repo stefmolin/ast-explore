@@ -75,6 +75,15 @@ def get_parser() -> argparse.ArgumentParser:
         type=validate_node_type,
     )
 
+    parser.add_argument(
+        '--interactive',
+        action='store_true',
+        help=(
+            'whether to run in interactive mode, which allows the user to decide '
+            'whether they want to visit a given node.'
+        ),
+    )
+
     return parser
 
 
@@ -89,7 +98,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     """
     args = get_parser().parse_args(argv)
 
-    visitor = NodeExplorer(args.source_code_file_path, args.types)
+    visitor = NodeExplorer(args.source_code_file_path, args.types, args.interactive)
     visitor.run()
 
 

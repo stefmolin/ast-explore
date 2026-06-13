@@ -20,12 +20,16 @@ class NodeExplorer(ast.NodeVisitor):
         each node encountered. Provide a sequence of strings (*e.g.*, ``['Try', 'Assert']``)
         or :mod:`ast` types (*e.g.*, ``[ast.Try, ast.Assert]``) to only explore specific
         node types.
+    interactive : bool, default ``False``
+        Whether to explore the AST interactively, in which case the traversal will stop
+        to show you information about the node and wait for you to decide the next step.
     """
 
     def __init__(
         self,
         source_code_file_path: str | os.PathLike[str],
         nodes_to_explore: Sequence[str] | Sequence[ast.AST] | None,
+        interactive: bool = False,
     ) -> None:
         self._nodes_visited = itertools.count(1)
 
@@ -36,6 +40,7 @@ class NodeExplorer(ast.NodeVisitor):
         self.tree = ast.parse(self._source_code)
 
         self._nodes_to_explore = nodes_to_explore
+        self._interactive = interactive
 
     def _explore(self, node: ast.AST) -> None:
         """
@@ -49,11 +54,26 @@ class NodeExplorer(ast.NodeVisitor):
         node_name = node.__class__.__name__
         node_class = f'{node.__module__}.{node_name}'
 
+        user_input = None
         should_explore = (
             self._nodes_to_explore is None
             or node_name in self._nodes_to_explore
             or node_class in self._nodes_to_explore
+        ) and (
+            (
+                user_input := input(
+                    f'Currently at an {node_class} node. '
+                    'Do you want to explore it? [y]es [n]o [q]uit '
+                ).casefold()
+            )
+            in ['y', '']
+            if self._interactive
+            else True
         )
+
+        if user_input == 'q':
+            print('Quitting...')
+            raise SystemExit(0)
 
         if should_explore:
             print(
