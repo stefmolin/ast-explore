@@ -1,10 +1,45 @@
 """CLI for exploring an AST of Python source code."""
 
 import argparse
+import difflib
 from collections.abc import Sequence
 
-from .. import __version__
+from .. import __version__, ast_node_types_generator
 from .explorer import NodeExplorer
+
+
+def validate_node_type(node_type: str) -> str:
+    """
+    Validate node type is an AST node.
+
+    Parameters
+    ----------
+    node_type : str
+        The node type to validate.
+
+    Returns
+    -------
+    str
+        The node type, if it is valid.
+
+    Raises
+    ------
+    argparse.ArgumentTypeError
+        This is raised when the node type is not valid, and an attempt will be made to
+        suggest a close match for a valid node type (if one exists).
+    """
+    if (
+        not node_type
+        or (node_name := node_type.removeprefix('ast.')) in ast_node_types_generator()
+    ):
+        return node_type
+
+    msg = f'Unknown AST node type "{node_name}".'
+    if did_you_mean := difflib.get_close_matches(
+        node_name, ast_node_types_generator(), n=1
+    ):
+        msg += f' Did you mean "{did_you_mean[0]}"?'
+    raise argparse.ArgumentTypeError(msg)
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -37,6 +72,7 @@ def get_parser() -> argparse.ArgumentParser:
             'node types to explain (e.g., --types Try ExceptionHandler). '
             "If you don't provide any specific types, all will be explained."
         ),
+        type=validate_node_type,
     )
 
     return parser
