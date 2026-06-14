@@ -7,9 +7,9 @@ import os
 import reprlib
 from collections.abc import Sequence
 from pathlib import Path
-from platform import python_version
 from textwrap import dedent
 
+from .. import PYTHON_VERSION
 from .display import print_header, print_section_divider, print_source_code
 
 
@@ -48,7 +48,7 @@ class NodeExplorer(ast.NodeVisitor):
             print(f'[ERROR] {exc.strerror}: {file_path}')
             raise
 
-        print(f'Parsing into a Python {python_version()} AST...')
+        print(f'Parsing into a Python {PYTHON_VERSION} AST...')
         try:
             self.tree = ast.parse(self._source_code)
         except SyntaxError:
@@ -94,7 +94,7 @@ class NodeExplorer(ast.NodeVisitor):
         if should_explore:
             print(
                 f'{next(self._nodes_visited)}. {node_class} '
-                f'(https://docs.python.org/3/library/ast.html#{node_class})'
+                f'(https://docs.python.org/{PYTHON_VERSION}/library/ast.html#{node_class})'
             )
 
             with contextlib.suppress(AttributeError, TypeError):

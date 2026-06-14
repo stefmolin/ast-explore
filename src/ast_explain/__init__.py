@@ -2,9 +2,13 @@
 
 import ast
 import importlib.metadata
+import sys
 from collections.abc import Iterator
 
 __version__ = importlib.metadata.version(__name__)
+
+
+PYTHON_VERSION = f'{sys.version_info.major}.{sys.version_info.minor}'
 
 
 def ast_node_types_generator() -> Iterator[str]:
@@ -41,4 +45,4 @@ def ast_node_types_generator() -> Iterator[str]:
     yield from subclass_generator(ast.AST)
 
 
-__all__ = ['__version__', 'ast_node_types_generator']
+__all__ = ['PYTHON_VERSION', '__version__', 'ast_node_types_generator']
