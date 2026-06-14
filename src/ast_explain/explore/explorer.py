@@ -109,6 +109,11 @@ class NodeExplorer(ast.NodeVisitor):
                 f'(https://docs.python.org/{PYTHON_VERSION}/library/ast.html#{node_class})'
             )
 
+            if isinstance(node, ast.Module):
+                print(
+                    '\nModule docstring:', reprlib.repr(ast.get_docstring(node)), '\n'
+                )
+
             with contextlib.suppress(AttributeError, TypeError):
                 code_segment = dedent(
                     ast.get_source_segment(self._source_code, node, padded=True)
