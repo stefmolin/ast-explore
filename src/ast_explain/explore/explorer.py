@@ -5,6 +5,7 @@ import itertools
 import os
 from collections.abc import Sequence
 from pathlib import Path
+from platform import python_version
 
 
 class NodeExplorer(ast.NodeVisitor):
@@ -34,6 +35,7 @@ class NodeExplorer(ast.NodeVisitor):
         self._nodes_visited = itertools.count(1)
 
         file_path = Path(source_code_file_path).resolve()
+        print(f'Reading Python source code from {file_path}...')
 
         try:
             self._source_code = file_path.read_text()
@@ -41,8 +43,7 @@ class NodeExplorer(ast.NodeVisitor):
             print(f'[ERROR] {exc.strerror}: {file_path}')
             raise
 
-        print(f'Processing {file_path}:')
-
+        print(f'Parsing into a Python {python_version()} AST...')
         try:
             self.tree = ast.parse(self._source_code)
         except SyntaxError:
@@ -105,5 +106,6 @@ class NodeExplorer(ast.NodeVisitor):
 
     def run(self) -> None:
         """Traverse the AST from the root to the leaves."""
+        print('Ready to explore the AST!')
         print(f'\nAST nodes encountered during depth-first traversal\n{"-" * 64}\n')
         self.visit(self.tree)
