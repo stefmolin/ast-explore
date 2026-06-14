@@ -182,10 +182,17 @@ class NodeExplorer(ast.NodeVisitor):
             )
             print(list_item, '-' * len(list_item), sep='\n')
 
-            if isinstance(node, ast.Module):
-                print(
-                    '\nModule docstring:', reprlib.repr(ast.get_docstring(node)), '\n'
-                )
+            match node:
+                case ast.Load() | ast.Store() | ast.Del():
+                    print(
+                        'This node specifies the context in which a variable (ast.Name) is used.'
+                    )
+                case ast.Module():
+                    print('\nModule docstring:', reprlib.repr(ast.get_docstring(node)))
+                case _:
+                    with contextlib.suppress(TypeError):
+                        if not ast.get_docstring(node):
+                            print('Docstring is missing.')
 
             self._show_source_code(node)
             self._show_node_specific_fields(node)
