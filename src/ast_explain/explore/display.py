@@ -31,7 +31,9 @@ def print_section_divider() -> None:
     print(f'\n{"-" * TERMINAL_WIDTH}\n')
 
 
-def print_source_code(code_segment: str, start_line_number: int = 1) -> None:
+def print_source_code(
+    code_segment: str, start_line_number: int = 1, max_lines: int = 5
+) -> None:
     """
     Print a source code segment with line numbers.
 
@@ -41,6 +43,8 @@ def print_source_code(code_segment: str, start_line_number: int = 1) -> None:
         The source code.
     start_line_number : int, default=1
         The starting line number.
+    max_lines : int, default=5
+        The maximum number of lines to show.
     """
     code_lines = code_segment.splitlines()
     end_line_number = len(code_lines) + start_line_number
@@ -55,8 +59,8 @@ def print_source_code(code_segment: str, start_line_number: int = 1) -> None:
                         start_line_number,
                         end_line_number,
                     ),
-                    code_lines,
-                    strict=True,
+                    code_lines[:max_lines],
+                    strict=False,
                 )
             ]
         ),
