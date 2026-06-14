@@ -1,5 +1,6 @@
 """Display utilities."""
 
+import ast
 import math
 import shutil
 
@@ -32,38 +33,53 @@ def print_section_divider() -> None:
 
 
 def print_source_code(
-    code_segment: str, start_line_number: int = 1, max_lines: int | None = None
+    source_code: str, node: ast.AST, max_lines: int | None = None
 ) -> None:
     """
     Print a source code segment with line numbers.
 
     Parameters
     ----------
-    code_segment : str
+    source_code : str
         The source code.
-    start_line_number : int, default=1
-        The starting line number.
+    node : ast.AST
+        The AST node.
     max_lines : int | None, optional
         The maximum number of lines to show. By default, show as many lines as can fit
         in the terminal window.
     """
-    code_lines = code_segment.splitlines()
-    end_line_number = len(code_lines) + start_line_number
+    code_lines = source_code.splitlines()
+
+    if should_highlight := (node.lineno == node.end_lineno):
+        code_segment = [code_lines[node.lineno - 1]]
+        underline = '^' * (node.end_col_offset - node.col_offset)
+    else:
+        code_segment = (
+            ast.get_source_segment(source_code, node, padded=True)
+        ).splitlines()
+
+    start_line_number = node.lineno
+    end_line_number = len(code_segment) + start_line_number
 
     digits = math.ceil(math.log10(end_line_number))
+    padding = digits + 1
+    separator = ' | '
+
+    print('\nSource code represented by the node:')
     print(
-        '\n'.join(
+        *(
             [
-                f'{line_number:>{digits + 1}} | {code}'
+                f'{line_number:>{padding}}{separator}{code}'
                 for line_number, code in zip(
-                    range(
-                        start_line_number,
-                        end_line_number,
-                    ),
-                    code_lines[: max_lines or TERMINAL_HEIGHT],
+                    range(start_line_number, end_line_number),
+                    code_segment[: max_lines or TERMINAL_HEIGHT],
                     strict=False,
                 )
             ]
         ),
-        end='\n\n',
+        f'{" ":>{(padding + len(separator)) + node.col_offset}}{underline}'
+        if should_highlight
+        else '',
+        sep='\n',
+        end='\n',
     )

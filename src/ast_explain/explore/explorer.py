@@ -7,7 +7,6 @@ import os
 import reprlib
 from collections.abc import Sequence
 from pathlib import Path
-from textwrap import dedent
 
 from .. import PYTHON_VERSION, ast_node_types_generator
 from .display import print_header, print_section_divider, print_source_code
@@ -121,12 +120,7 @@ class NodeExplorer(ast.NodeVisitor):
             The node to explore.
         """
         with contextlib.suppress(AttributeError, TypeError):
-            code_segment = dedent(
-                ast.get_source_segment(self._source_code, node, padded=True)
-            )
-
-            print('\nSource code represented by the node:')
-            print_source_code(code_segment, node.lineno)
+            print_source_code(self._source_code, node)
 
             if self._prompt_user('Show location fields?'):
                 print(
