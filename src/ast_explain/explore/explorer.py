@@ -176,10 +176,11 @@ class NodeExplorer(ast.NodeVisitor):
         )
 
         if should_explore:
-            print(
+            list_item = (
                 f'{next(self._nodes_visited)}. {node_name} '
                 f'(https://docs.python.org/{PYTHON_VERSION}/library/ast.html#{node_class})'
             )
+            print(list_item, '-' * len(list_item), sep='\n')
 
             if isinstance(node, ast.Module):
                 print(

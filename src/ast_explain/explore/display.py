@@ -24,12 +24,12 @@ def print_header(title: str) -> None:
         border = symbol * 2
         title_line = border + title_line[2:-2] + border
 
-    print(line, title_line, line, sep='\n')
+    print(line, title_line, line, sep='\n', end='\n\n')
 
 
 def print_section_divider() -> None:
     """Print section divider."""
-    print(f'\n{"-" * TERMINAL_WIDTH}\n')
+    print(f'\n{"*" * TERMINAL_WIDTH}\n')
 
 
 def print_source_code(
