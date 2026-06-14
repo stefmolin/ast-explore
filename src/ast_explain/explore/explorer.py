@@ -135,7 +135,7 @@ class NodeExplorer(ast.NodeVisitor):
                         ]
                     ],
                     sep='\n',
-                    end='\n\n',
+                    end='\n',
                 )
 
     def _show_node_specific_fields(self, node: ast.AST) -> None:
@@ -154,7 +154,7 @@ class NodeExplorer(ast.NodeVisitor):
             ]
         ) and self._prompt_user('Inspect node-specific fields?'):
             print(
-                'AST node-specific fields and their values:',
+                '\nAST node-specific fields and their values:',
                 *node_specific_fields,
                 sep='\n',
             )

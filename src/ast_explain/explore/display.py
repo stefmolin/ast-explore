@@ -50,7 +50,8 @@ def print_source_code(
     """
     code_lines = source_code.splitlines()
 
-    if should_highlight := (node.lineno == node.end_lineno):
+    underline = None
+    if node.lineno == node.end_lineno:
         code_segment = [code_lines[node.lineno - 1]]
         underline = '^' * (node.end_col_offset - node.col_offset)
     else:
@@ -77,9 +78,10 @@ def print_source_code(
                 )
             ]
         ),
-        f'{" ":>{(padding + len(separator)) + node.col_offset}}{underline}'
-        if should_highlight
-        else '',
         sep='\n',
         end='\n',
     )
+
+    if underline:
+        print(f'{" ":>{(padding + len(separator)) + node.col_offset}}{underline}')
+    print()
