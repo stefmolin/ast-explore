@@ -4,11 +4,11 @@ import ast
 import contextlib
 import itertools
 import os
-import pprint
+import reprlib
 from collections.abc import Sequence
 from pathlib import Path
 from platform import python_version
-from textwrap import dedent, indent
+from textwrap import dedent
 
 from .display import print_header, print_section_divider, print_source_code
 
@@ -120,18 +120,16 @@ class NodeExplorer(ast.NodeVisitor):
                     end='\n\n',
                 )
 
-            ast_fields = dict(ast.iter_fields(node))
-            print(
-                'AST node-specific fields and their values:',
-                indent(
-                    pprint.pformat(ast_fields, width=60)
-                    if ast_fields
-                    else 'No fields to access',
-                    '| ',
-                ),
-                sep='\n',
-            )
-            print_section_divider()
+            if node_specific_fields := [
+                f'- {key}: {reprlib.repr(value)}'
+                for key, value in ast.iter_fields(node)
+            ]:
+                print(
+                    'AST node-specific fields and their values:',
+                    *node_specific_fields,
+                    sep='\n',
+                )
+                print_section_divider()
 
     def generic_visit(self, node: ast.AST) -> None:
         """
