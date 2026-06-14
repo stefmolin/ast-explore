@@ -3,13 +3,14 @@
 import ast
 import contextlib
 import itertools
-import math
 import os
 import pprint
 from collections.abc import Sequence
 from pathlib import Path
 from platform import python_version
 from textwrap import dedent, indent
+
+from .display import print_header, print_section_divider, print_source_code
 
 
 class NodeExplorer(ast.NodeVisitor):
@@ -57,41 +58,6 @@ class NodeExplorer(ast.NodeVisitor):
         self._nodes_to_explore = nodes_to_explore
         self._interactive = interactive
 
-        self._section_divider = f'\n{"-" * 64}\n'
-
-    @staticmethod
-    def _print_source_code(code_segment: str, start_line_number: int = 1) -> None:
-        """
-        Print a source code segment with line numbers.
-
-        Parameters
-        ----------
-        code_segment : str
-            The source code.
-        start_line_number : int, default=1
-            The starting line number.
-        """
-        code_lines = code_segment.splitlines()
-        end_line_number = len(code_lines) + start_line_number
-
-        digits = math.ceil(math.log10(end_line_number))
-        print(
-            '\n'.join(
-                [
-                    f'{line_number:>{digits + 1}} | {code}'
-                    for line_number, code in zip(
-                        range(
-                            start_line_number,
-                            end_line_number,
-                        ),
-                        code_lines,
-                        strict=True,
-                    )
-                ]
-            ),
-            end='\n\n',
-        )
-
     def _explore(self, node: ast.AST) -> None:
         """
         Explore an AST node.
@@ -137,7 +103,7 @@ class NodeExplorer(ast.NodeVisitor):
                 )
 
                 print('\nSource code represented by the node:')
-                self._print_source_code(code_segment, node.lineno)
+                print_source_code(code_segment, node.lineno)
 
                 print(
                     'Location in the source code:',
@@ -163,9 +129,9 @@ class NodeExplorer(ast.NodeVisitor):
                     else 'No fields to access',
                     '| ',
                 ),
-                self._section_divider,
                 sep='\n',
             )
+            print_section_divider()
 
     def generic_visit(self, node: ast.AST) -> None:
         """
@@ -182,7 +148,5 @@ class NodeExplorer(ast.NodeVisitor):
     def run(self) -> None:
         """Traverse the AST from the root to the leaves."""
         print('Ready to explore the AST!')
-        print(
-            f'{self._section_divider.replace("-", "=")}====   AST nodes encountered during depth-first traversal   ===={self._section_divider.replace("-", "=")}'
-        )
+        print_header('AST nodes encountered during depth-first traversal')
         self.visit(self.tree)
