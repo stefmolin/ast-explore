@@ -1,11 +1,15 @@
 """Traverse the AST to provide information on desired nodes."""
 
 import ast
+import contextlib
 import itertools
+import math
 import os
+import pprint
 from collections.abc import Sequence
 from pathlib import Path
 from platform import python_version
+from textwrap import dedent, indent
 
 
 class NodeExplorer(ast.NodeVisitor):
@@ -21,7 +25,7 @@ class NodeExplorer(ast.NodeVisitor):
         each node encountered. Provide a sequence of strings (*e.g.*, ``['Try', 'Assert']``)
         or :mod:`ast` types (*e.g.*, ``[ast.Try, ast.Assert]``) to only explore specific
         node types.
-    interactive : bool, default ``False``
+    interactive : bool, default=False
         Whether to explore the AST interactively, in which case the traversal will stop
         to show you information about the node and wait for you to decide the next step.
     """
@@ -52,6 +56,41 @@ class NodeExplorer(ast.NodeVisitor):
 
         self._nodes_to_explore = nodes_to_explore
         self._interactive = interactive
+
+        self._section_divider = f'\n{"-" * 64}\n'
+
+    @staticmethod
+    def _print_source_code(code_segment: str, start_line_number: int = 1) -> None:
+        """
+        Print a source code segment with line numbers.
+
+        Parameters
+        ----------
+        code_segment : str
+            The source code.
+        start_line_number : int, default=1
+            The starting line number.
+        """
+        code_lines = code_segment.splitlines()
+        end_line_number = len(code_lines) + start_line_number
+
+        digits = math.ceil(math.log10(end_line_number))
+        print(
+            '\n'.join(
+                [
+                    f'{line_number:>{digits + 1}} | {code}'
+                    for line_number, code in zip(
+                        range(
+                            start_line_number,
+                            end_line_number,
+                        ),
+                        code_lines,
+                        strict=True,
+                    )
+                ]
+            ),
+            end='\n\n',
+        )
 
     def _explore(self, node: ast.AST) -> None:
         """
@@ -92,6 +131,42 @@ class NodeExplorer(ast.NodeVisitor):
                 f'(https://docs.python.org/3/library/ast.html#{node_class})'
             )
 
+            with contextlib.suppress(AttributeError, TypeError):
+                code_segment = dedent(
+                    ast.get_source_segment(self._source_code, node, padded=True)
+                )
+
+                print('\nSource code represented by the node:')
+                self._print_source_code(code_segment, node.lineno)
+
+                print(
+                    'Location in the source code:',
+                    *[
+                        f'- {key}: {getattr(node, key)}'
+                        for key in [
+                            'lineno',
+                            'end_lineno',
+                            'col_offset',
+                            'end_col_offset',
+                        ]
+                    ],
+                    sep='\n',
+                    end='\n\n',
+                )
+
+            ast_fields = dict(ast.iter_fields(node))
+            print(
+                'AST node-specific fields and their values:',
+                indent(
+                    pprint.pformat(ast_fields, width=60)
+                    if ast_fields
+                    else 'No fields to access',
+                    '| ',
+                ),
+                self._section_divider,
+                sep='\n',
+            )
+
     def generic_visit(self, node: ast.AST) -> None:
         """
         Visit each node, with the option to explore before continuing the traversal.
@@ -107,5 +182,7 @@ class NodeExplorer(ast.NodeVisitor):
     def run(self) -> None:
         """Traverse the AST from the root to the leaves."""
         print('Ready to explore the AST!')
-        print(f'\nAST nodes encountered during depth-first traversal\n{"-" * 64}\n')
+        print(
+            f'{self._section_divider.replace("-", "=")}====   AST nodes encountered during depth-first traversal   ===={self._section_divider.replace("-", "=")}'
+        )
         self.visit(self.tree)
