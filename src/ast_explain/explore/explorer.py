@@ -7,6 +7,7 @@ import os
 import reprlib
 from collections.abc import Sequence
 from pathlib import Path
+from typing import cast
 
 from .. import PYTHON_VERSION, ast_node_types_generator
 from .display import print_header, print_section_divider, print_source_code
@@ -20,7 +21,7 @@ class NodeExplorer(ast.NodeVisitor):
     ----------
     source_code_file_path : str | os.PathLike[str]
         Path to the Python source code to explore. The code must be valid Python syntax.
-    nodes_to_explore : Sequence[str] | Sequence[ast.AST] | None
+    nodes_to_explore : Sequence[str] | Sequence[type[ast.AST]] | None
         The types of nodes to explore. When set to ``None``, the traversal will explore
         each node encountered. Provide a sequence of strings (*e.g.*, ``['Try', 'Assert']``)
         or :mod:`ast` types (*e.g.*, ``[ast.Try, ast.Assert]``) to only explore specific
@@ -33,7 +34,7 @@ class NodeExplorer(ast.NodeVisitor):
     def __init__(
         self,
         source_code_file_path: str | os.PathLike[str],
-        nodes_to_explore: Sequence[str] | Sequence[ast.AST] | None,
+        nodes_to_explore: Sequence[str] | Sequence[type[ast.AST]] | None,
         interactive: bool = False,
     ) -> None:
         self._nodes_visited = itertools.count(1)
@@ -57,15 +58,18 @@ class NodeExplorer(ast.NodeVisitor):
         match nodes_to_explore:
             case None:
                 self._nodes_to_explore = set(ast_node_types_generator())
-            case [*items]:
-                if all(isinstance(item, str) for item in items):
-                    self._nodes_to_explore = {
-                        node_type.removeprefix('ast.') for node_type in nodes_to_explore
-                    }
-                elif all(issubclass(item, ast.AST) for item in items):
-                    self._nodes_to_explore = {
-                        node_type.__name__ for node_type in nodes_to_explore
-                    }
+            case [str(), *other_node_types] if all(
+                isinstance(node_type, str) for node_type in other_node_types
+            ):
+                self._nodes_to_explore = {
+                    node_type.removeprefix('ast.') for node_type in nodes_to_explore
+                }
+            case [type(), *other_node_types] if all(
+                issubclass(node_type, ast.AST) for node_type in other_node_types
+            ):
+                self._nodes_to_explore = {
+                    cast('str', node_type.__name__) for node_type in nodes_to_explore
+                }
             case _:
                 raise TypeError(
                     'nodes_to_explore must be a sequence of strings or AST classes, if not None'
@@ -188,10 +192,10 @@ class NodeExplorer(ast.NodeVisitor):
                         'This node specifies the context in which a variable (ast.Name) is used.'
                     )
                 case ast.Module():
-                    print('\nModule docstring:', reprlib.repr(ast.get_docstring(node)))
+                    print('Module docstring:', reprlib.repr(ast.get_docstring(node)))
                 case _:
                     with contextlib.suppress(TypeError):
-                        if not ast.get_docstring(node):
+                        if not ast.get_docstring(node):  # type: ignore[arg-type]
                             print('Docstring is missing.')
 
             self._show_source_code(node)

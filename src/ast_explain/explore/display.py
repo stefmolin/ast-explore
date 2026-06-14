@@ -1,5 +1,6 @@
 """Display utilities."""
 
+# mypy: disable-error-code="attr-defined"
 import ast
 import itertools
 import math
@@ -71,7 +72,7 @@ def print_source_code(
             underline = '^' * width
     else:
         code_segment = (
-            ast.get_source_segment(source_code, node, padded=True)
+            ast.get_source_segment(source_code, node, padded=True) or ''
         ).splitlines()
 
     if (num_lines := len(code_segment)) > 1 and (
@@ -88,11 +89,22 @@ def print_source_code(
     padding = digits + 1
     separator = ' | '
 
+    def _get_line_prefix(
+        line_number: int, node: ast.AST
+    ) -> str:  # numpydoc ignore=PR01,RT01
+        """Helper function to get the prefix for the line of source code."""
+        text = (
+            f'{arrow}{line_number}'
+            if node.lineno <= line_number <= node.end_lineno
+            else line_number
+        )
+        return f'{f"{text}":>{padding}}'
+
     print('\nSource code represented by the node:')
     print(
         *(
             [
-                f'{f"{arrow}{line_number}" if node.lineno <= line_number <= node.end_lineno else line_number:>{padding}}{separator}{code}'
+                f'{f"{_get_line_prefix(line_number, node)}":>{padding}}{separator}{code}'
                 for line_number, code in zip(
                     range(start_line_number, end_line_number),
                     code_segment[: max_lines or TERMINAL_HEIGHT],
