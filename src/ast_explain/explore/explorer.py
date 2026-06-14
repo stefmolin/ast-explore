@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from textwrap import dedent
 
-from .. import PYTHON_VERSION
+from .. import PYTHON_VERSION, ast_node_types_generator
 from .display import print_header, print_section_divider, print_source_code
 
 
@@ -55,7 +55,23 @@ class NodeExplorer(ast.NodeVisitor):
             print('[ERROR] Input source code is not syntactically-correct')
             raise
 
-        self._nodes_to_explore = nodes_to_explore
+        match nodes_to_explore:
+            case None:
+                self._nodes_to_explore = set(ast_node_types_generator())
+            case [*items]:
+                if all(isinstance(item, str) for item in items):
+                    self._nodes_to_explore = {
+                        node_type.removeprefix('ast.') for node_type in nodes_to_explore
+                    }
+                elif all(issubclass(item, ast.AST) for item in items):
+                    self._nodes_to_explore = {
+                        node_type.__name__ for node_type in nodes_to_explore
+                    }
+            case _:
+                raise TypeError(
+                    'nodes_to_explore must be a sequence of strings or AST classes, if not None'
+                )
+
         self._interactive = interactive
 
     def _explore(self, node: ast.AST) -> None:
@@ -71,11 +87,7 @@ class NodeExplorer(ast.NodeVisitor):
         node_class = f'{node.__module__}.{node_name}'
 
         user_input = None
-        should_explore = (
-            self._nodes_to_explore is None
-            or node_name in self._nodes_to_explore
-            or node_class in self._nodes_to_explore
-        ) and (
+        should_explore = (node_name in self._nodes_to_explore) and (
             (
                 user_input := input(
                     f'Currently at an {node_class} node. '

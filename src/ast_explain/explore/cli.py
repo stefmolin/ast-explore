@@ -53,7 +53,7 @@ def get_parser() -> argparse.ArgumentParser:
         The configured argument parser.
     """
     parser = argparse.ArgumentParser(
-        description='Traverse the AST of the input source code and explain the nodes encountered',
+        description='Traverse the AST of the input source code and explain the nodes encountered'
     )
 
     parser.add_argument(
