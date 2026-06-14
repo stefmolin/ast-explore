@@ -1,6 +1,7 @@
 """Display utilities."""
 
 import ast
+import itertools
 import math
 import shutil
 
@@ -50,19 +51,40 @@ def print_source_code(
     """
     code_lines = source_code.splitlines()
 
+    start_line_number = node.lineno
+    highlight_line_number = None
+
+    arrow = ''
     underline = None
     if node.lineno == node.end_lineno:
-        code_segment = [code_lines[node.lineno - 1]]
-        underline = '^' * (node.end_col_offset - node.col_offset)
+        highlight_line_number = node.lineno
+        start_line_number = max(1, start_line_number - 2)
+
+        code_segment = list(
+            itertools.dropwhile(
+                lambda line: not line,
+                code_lines[start_line_number - 1 : highlight_line_number],
+            )
+        )
+
+        if (width := node.end_col_offset - node.col_offset) < len(code_segment[-1]):
+            underline = '^' * width
     else:
         code_segment = (
             ast.get_source_segment(source_code, node, padded=True)
         ).splitlines()
 
-    start_line_number = node.lineno
-    end_line_number = len(code_segment) + start_line_number
+    if (num_lines := len(code_segment)) > 1 and (
+        num_lines > (node.end_lineno - node.lineno + 1)
+    ):
+        arrow = '-> '
+
+    end_line_number = num_lines + start_line_number
 
     digits = math.ceil(math.log10(end_line_number))
+    if arrow:
+        digits += len(arrow)
+
     padding = digits + 1
     separator = ' | '
 
@@ -70,7 +92,7 @@ def print_source_code(
     print(
         *(
             [
-                f'{line_number:>{padding}}{separator}{code}'
+                f'{f"{arrow}{line_number}" if node.lineno <= line_number <= node.end_lineno else line_number:>{padding}}{separator}{code}'
                 for line_number, code in zip(
                     range(start_line_number, end_line_number),
                     code_segment[: max_lines or TERMINAL_HEIGHT],
