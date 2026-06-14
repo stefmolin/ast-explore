@@ -74,54 +74,61 @@ class NodeExplorer(ast.NodeVisitor):
 
         self._interactive = interactive
 
-    def _explore(self, node: ast.AST) -> None:
+    def _prompt_user(self, prompt: str) -> bool:
         """
-        Explore an AST node.
+        Prompt user (when in interactive mode) or return ``True``.
+
+        Parameters
+        ----------
+        prompt : str
+            The prompt. Supported options will be appended automatically.
+
+        Returns
+        -------
+        bool
+            Whether the user wants to explore further.
+
+        Raises
+        ------
+        SystemExit
+            This is raised when the user requests to quit.
+        """
+        if self._interactive:
+            user_input = input(f'{prompt} [y]es [n]o [q]uit ').casefold()
+
+            match user_input:
+                case 'q':
+                    print('Quitting...')
+                    raise SystemExit(0)
+                case 'n':
+                    return False
+                case 'y' | '':
+                    print()
+                    return True
+                case _:
+                    print(f'Invalid response "{user_input}"')
+                    return self._prompt_user(prompt)
+
+        return True
+
+    def _show_source_code(self, node: ast.AST) -> None:
+        """
+        Show the source code for a given node (if applicable).
 
         Parameters
         ----------
         node : ast.AST
             The node to explore.
         """
-        node_name = node.__class__.__name__
-        node_class = f'{node.__module__}.{node_name}'
-
-        user_input = None
-        should_explore = (node_name in self._nodes_to_explore) and (
-            (
-                user_input := input(
-                    f'Currently at an {node_class} node. '
-                    'Do you want to explore it? [y]es [n]o [q]uit '
-                ).casefold()
-            )
-            in ['y', '']
-            if self._interactive
-            else True
-        )
-
-        if user_input == 'q':
-            print('Quitting...')
-            raise SystemExit(0)
-
-        if should_explore:
-            print(
-                f'{next(self._nodes_visited)}. {node_class} '
-                f'(https://docs.python.org/{PYTHON_VERSION}/library/ast.html#{node_class})'
+        with contextlib.suppress(AttributeError, TypeError):
+            code_segment = dedent(
+                ast.get_source_segment(self._source_code, node, padded=True)
             )
 
-            if isinstance(node, ast.Module):
-                print(
-                    '\nModule docstring:', reprlib.repr(ast.get_docstring(node)), '\n'
-                )
+            print('\nSource code represented by the node:')
+            print_source_code(code_segment, node.lineno)
 
-            with contextlib.suppress(AttributeError, TypeError):
-                code_segment = dedent(
-                    ast.get_source_segment(self._source_code, node, padded=True)
-                )
-
-                print('\nSource code represented by the node:')
-                print_source_code(code_segment, node.lineno)
-
+            if self._prompt_user('Show location fields?'):
                 print(
                     'Location in the source code:',
                     *[
@@ -137,16 +144,57 @@ class NodeExplorer(ast.NodeVisitor):
                     end='\n\n',
                 )
 
-            if node_specific_fields := [
+    def _show_node_specific_fields(self, node: ast.AST) -> None:
+        """
+        Show node-specific fields and their values.
+
+        Parameters
+        ----------
+        node : ast.AST
+            The node to explore.
+        """
+        if (
+            node_specific_fields := [
                 f'- {key}: {reprlib.repr(value)}'
                 for key, value in ast.iter_fields(node)
-            ]:
+            ]
+        ) and self._prompt_user('Inspect node-specific fields?'):
+            print(
+                'AST node-specific fields and their values:',
+                *node_specific_fields,
+                sep='\n',
+            )
+
+    def _explore(self, node: ast.AST) -> None:
+        """
+        Explore an AST node.
+
+        Parameters
+        ----------
+        node : ast.AST
+            The node to explore.
+        """
+        node_name = node.__class__.__name__
+        node_class = f'{node.__module__}.{node_name}'
+
+        should_explore = (node_name in self._nodes_to_explore) and self._prompt_user(
+            f'Currently at an {node_class} node. Do you want to explore it?'
+        )
+
+        if should_explore:
+            print(
+                f'{next(self._nodes_visited)}. {node_name} '
+                f'(https://docs.python.org/{PYTHON_VERSION}/library/ast.html#{node_class})'
+            )
+
+            if isinstance(node, ast.Module):
                 print(
-                    'AST node-specific fields and their values:',
-                    *node_specific_fields,
-                    sep='\n',
+                    '\nModule docstring:', reprlib.repr(ast.get_docstring(node)), '\n'
                 )
-                print_section_divider()
+
+            self._show_source_code(node)
+            self._show_node_specific_fields(node)
+            print_section_divider()
 
     def generic_visit(self, node: ast.AST) -> None:
         """
