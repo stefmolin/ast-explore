@@ -55,7 +55,7 @@ def print_source_code(
     start_line_number = node.lineno
     highlight_line_number = None
 
-    arrow = ''
+    arrow = '   '
     underline = None
     if node.lineno == node.end_lineno:
         highlight_line_number = node.lineno
@@ -86,7 +86,7 @@ def print_source_code(
     if arrow:
         digits += len(arrow)
 
-    padding = digits + 1
+    padding = digits
     separator = ' | '
 
     def _get_line_prefix(
@@ -100,7 +100,7 @@ def print_source_code(
         )
         return f'{f"{text}":>{padding}}'
 
-    print('\nSource code represented by the node:')
+    print('\n🚀 Source code represented by the node:')
     print(
         *(
             [

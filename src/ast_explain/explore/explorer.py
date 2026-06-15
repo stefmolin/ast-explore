@@ -5,6 +5,7 @@ import contextlib
 import itertools
 import os
 import reprlib
+import time
 from collections.abc import Sequence
 from pathlib import Path
 from typing import cast
@@ -40,7 +41,7 @@ class NodeExplorer(ast.NodeVisitor):
         self._nodes_visited = itertools.count(1)
 
         file_path = Path(source_code_file_path).resolve()
-        print(f'Reading Python source code from {file_path}...')
+        print(f'📖 Reading Python source code from {file_path}...')
 
         try:
             self._source_code = file_path.read_text()
@@ -48,7 +49,7 @@ class NodeExplorer(ast.NodeVisitor):
             print(f'[ERROR] {exc.strerror}: {file_path}')
             raise
 
-        print(f'Parsing into a Python {PYTHON_VERSION} AST...')
+        print(f'🔍 Parsing into a Python {PYTHON_VERSION} AST...')
         try:
             self.tree = ast.parse(self._source_code)
         except SyntaxError:
@@ -97,11 +98,11 @@ class NodeExplorer(ast.NodeVisitor):
             This is raised when the user requests to quit.
         """
         if self._interactive:
-            user_input = input(f'{prompt} [y]es [n]o [q]uit ').casefold()
+            user_input = input(f'❓ {prompt} [y]es [n]o [q]uit: ').casefold()
 
             match user_input:
                 case 'q':
-                    print('Quitting...')
+                    print('🛑 Quitting...')
                     raise SystemExit(0)
                 case 'n':
                     return False
@@ -109,7 +110,8 @@ class NodeExplorer(ast.NodeVisitor):
                     print()
                     return True
                 case _:
-                    print(f'Invalid response "{user_input}"')
+                    print(f'🫤  Invalid response "{user_input}"')
+                    time.sleep(1)
                     return self._prompt_user(prompt)
 
         return True
@@ -123,14 +125,14 @@ class NodeExplorer(ast.NodeVisitor):
         node : ast.AST
             The node to explore.
         """
-        with contextlib.suppress(AttributeError, TypeError):
+        try:
             print_source_code(self._source_code, node)
 
             if self._prompt_user('Show location fields?'):
                 print(
-                    'Location in the source code:',
+                    '📍 Location in the source code:',
                     *[
-                        f'- {key}: {getattr(node, key)}'
+                        f'   - {key}: {getattr(node, key)}'
                         for key in [
                             'lineno',
                             'end_lineno',
@@ -139,8 +141,10 @@ class NodeExplorer(ast.NodeVisitor):
                         ]
                     ],
                     sep='\n',
-                    end='\n',
+                    end='\n\n',
                 )
+        except (AttributeError, TypeError):
+            print('📍 This node type does not have any line number information.\n')
 
     def _show_node_specific_fields(self, node: ast.AST) -> None:
         """
@@ -151,17 +155,34 @@ class NodeExplorer(ast.NodeVisitor):
         node : ast.AST
             The node to explore.
         """
-        if (
-            node_specific_fields := [
-                f'- {key}: {reprlib.repr(value)}'
+        if self._prompt_user('Do you want more information on this node?'):
+            match node:
+                case ast.Load() | ast.Store() | ast.Del():
+                    print(
+                        '💡 This node specifies the context in which a variable',
+                        '(ast.Name) is used.',
+                    )
+                case ast.Module():
+                    print('📝', end=' ')
+                    if docstring := ast.get_docstring(node):
+                        print(f'Module docstring: {reprlib.repr(docstring)}')
+                    else:
+                        print('Docstring is missing.')
+                    print()
+                case _:
+                    with contextlib.suppress(TypeError):
+                        if not ast.get_docstring(node):  # type: ignore[arg-type]
+                            print('📝 Docstring is missing.\n')
+
+            if node_specific_fields := [
+                f'   - {key}: {reprlib.repr(value)}'
                 for key, value in ast.iter_fields(node)
-            ]
-        ) and self._prompt_user('Inspect node-specific fields?'):
-            print(
-                '\nAST node-specific fields and their values:',
-                *node_specific_fields,
-                sep='\n',
-            )
+            ]:
+                print(
+                    '✨ AST node-specific fields and their values:',
+                    *node_specific_fields,
+                    sep='\n',
+                )
 
     def _explore(self, node: ast.AST) -> None:
         """
@@ -175,32 +196,24 @@ class NodeExplorer(ast.NodeVisitor):
         node_name = node.__class__.__name__
         node_class = f'{node.__module__}.{node_name}'
 
-        should_explore = (node_name in self._nodes_to_explore) and self._prompt_user(
-            f'Currently at an {node_class} node. Do you want to explore it?'
-        )
-
-        if should_explore:
+        if node_name in self._nodes_to_explore:
             list_item = (
                 f'{next(self._nodes_visited)}. {node_name} '
                 f'(https://docs.python.org/{PYTHON_VERSION}/library/ast.html#{node_class})'
             )
             print(list_item, '-' * len(list_item), sep='\n')
 
-            match node:
-                case ast.Load() | ast.Store() | ast.Del():
-                    print(
-                        'This node specifies the context in which a variable (ast.Name) is used.'
-                    )
-                case ast.Module():
-                    print('Module docstring:', reprlib.repr(ast.get_docstring(node)))
-                case _:
-                    with contextlib.suppress(TypeError):
-                        if not ast.get_docstring(node):  # type: ignore[arg-type]
-                            print('Docstring is missing.')
-
             self._show_source_code(node)
             self._show_node_specific_fields(node)
             print_section_divider()
+
+            if not self._prompt_user('Continue traversal?'):
+                print('🛑 Stopping traversal...')
+                raise SystemExit(0)
+
+            if self._interactive:
+                print(f'⏭️  Leaving {node_class} node...')
+                print_section_divider()
 
     def generic_visit(self, node: ast.AST) -> None:
         """
@@ -216,6 +229,7 @@ class NodeExplorer(ast.NodeVisitor):
 
     def run(self) -> None:
         """Traverse the AST from the root to the leaves."""
-        print('Ready to explore the AST!')
+        print('✅ Ready to explore the AST!\n')
         print_header('AST nodes encountered during depth-first traversal')
         self.visit(self.tree)
+        print('🏆 Traversal completed!')

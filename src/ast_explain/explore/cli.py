@@ -115,6 +115,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         visitor.run()
     except KeyboardInterrupt:
+        print('\n🛑 Exiting...')
         return 0
     except SystemExit as exit:
         return cast('int', exit.code)
