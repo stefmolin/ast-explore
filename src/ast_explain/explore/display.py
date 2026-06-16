@@ -4,6 +4,7 @@
 import ast
 import itertools
 import math
+import operator
 import shutil
 
 TERMINAL_WIDTH, TERMINAL_HEIGHT = shutil.get_terminal_size()
@@ -63,8 +64,7 @@ def print_source_code(
 
         code_segment = list(
             itertools.dropwhile(
-                lambda line: not line,
-                code_lines[start_line_number - 1 : highlight_line_number],
+                operator.not_, code_lines[start_line_number - 1 : highlight_line_number]
             )
         )
 
