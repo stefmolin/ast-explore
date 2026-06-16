@@ -129,16 +129,18 @@ class NodeExplorer(ast.NodeVisitor):
             print_source_code(self._source_code, node)
 
             if self._prompt_user('Show location fields?'):
+                location_fields = [
+                    'lineno',
+                    'end_lineno',
+                    'col_offset',
+                    'end_col_offset',
+                ]
+                gap = max(len(field) for field in location_fields)
                 print(
                     '📍 Location in the source code:',
                     *[
-                        f'   - {key}: {getattr(node, key)}'
-                        for key in [
-                            'lineno',
-                            'end_lineno',
-                            'col_offset',
-                            'end_col_offset',
-                        ]
+                        f'   - {key:<{gap + 1}}: {getattr(node, key)}'
+                        for key in location_fields
                     ],
                     sep='\n',
                     end='\n\n',
@@ -175,12 +177,15 @@ class NodeExplorer(ast.NodeVisitor):
                             print('📝 Docstring is missing.\n')
 
             if node_specific_fields := [
-                f'   - {key}: {reprlib.repr(value)}'
-                for key, value in ast.iter_fields(node)
+                (key, reprlib.repr(value)) for key, value in ast.iter_fields(node)
             ]:
+                gap = max(len(key) for key, _ in node_specific_fields)
                 print(
                     '✨ AST node-specific fields and their values:',
-                    *node_specific_fields,
+                    *[
+                        f'   - {key:<{gap + 1}}: {value}'
+                        for key, value in node_specific_fields
+                    ],
                     sep='\n',
                 )
 
