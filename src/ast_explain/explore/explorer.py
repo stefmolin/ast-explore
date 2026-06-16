@@ -98,7 +98,9 @@ class NodeExplorer(ast.NodeVisitor):
             This is raised when the user requests to quit.
         """
         if self._interactive:
-            user_input = input(f'❓ {prompt} [y]es [n]o [q]uit: ').casefold()
+            user_input = (
+                input(f'❓ {prompt} [y]es [n]o [q]uit: ').casefold().strip()[:1]
+            )
 
             match user_input:
                 case 'q':
