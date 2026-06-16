@@ -46,14 +46,14 @@ class NodeExplorer(ast.NodeVisitor):
         try:
             self._source_code = file_path.read_text()
         except FileNotFoundError as exc:
-            print(f'[ERROR] {exc.strerror}: {file_path}')
+            print(f'⚠️  {exc.strerror}')
             raise
 
         print(f'🔍 Parsing into a Python {PYTHON_VERSION} AST...')
         try:
             self.tree = ast.parse(self._source_code)
         except SyntaxError:
-            print('[ERROR] Input source code is not syntactically-correct')
+            print('⚠️  Input source code is not syntactically-correct')
             raise
 
         match nodes_to_explore:
@@ -212,7 +212,7 @@ class NodeExplorer(ast.NodeVisitor):
                 raise SystemExit(0)
 
             if self._interactive:
-                print(f'⏭️  Leaving {node_class} node...')
+                print(f'🚀 Leaving {node_class} node...')
                 print_section_divider()
 
     def generic_visit(self, node: ast.AST) -> None:

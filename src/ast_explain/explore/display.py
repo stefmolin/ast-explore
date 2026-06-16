@@ -100,7 +100,7 @@ def print_source_code(
         )
         return f'{f"{text}":>{padding}}'
 
-    print('\n🚀 Source code represented by the node:')
+    print('\n🐍 Source code represented by the node:')
     print(
         *(
             [
