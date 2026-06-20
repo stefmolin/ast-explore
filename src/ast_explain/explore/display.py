@@ -125,5 +125,5 @@ def print_source_code(
     )
 
     if underline:
-        print(f'{" ":>{(padding + len(separator)) + node.col_offset}}{underline}')
+        print(f'{" ":>{padding}}{separator}{" ":>{node.col_offset}}{underline}')
     print()
