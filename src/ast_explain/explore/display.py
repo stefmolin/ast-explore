@@ -10,7 +10,7 @@ import shutil
 TERMINAL_WIDTH, TERMINAL_HEIGHT = shutil.get_terminal_size()
 
 
-def print_header(title: str) -> None:
+def print_header(title: str, symbol: str) -> None:
     """
     Print a header section with the title centered.
 
@@ -18,8 +18,9 @@ def print_header(title: str) -> None:
     ----------
     title : str
         The title of the section.
+    symbol : str
+        The symbol to use to build the border.
     """
-    symbol = '='
     line = symbol * TERMINAL_WIDTH
     title_line = f'{title:^{TERMINAL_WIDTH}}'
 
@@ -30,9 +31,16 @@ def print_header(title: str) -> None:
     print(line, title_line, line, sep='\n', end='\n\n')
 
 
-def print_section_divider() -> None:
-    """Print section divider."""
-    print(f'\n{"*" * TERMINAL_WIDTH}\n')
+def print_section_divider(symbol: str) -> None:
+    """
+    Print section divider.
+
+    Parameters
+    ----------
+    symbol : str
+        The symbol to use for the divider.
+    """
+    print(f'{symbol * TERMINAL_WIDTH}\n')
 
 
 def print_source_code(

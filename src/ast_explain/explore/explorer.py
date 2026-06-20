@@ -209,7 +209,7 @@ class NodeExplorer(ast.NodeVisitor):
                 f'{next(self._nodes_visited)}. {node_name} '
                 f'(https://docs.python.org/{PYTHON_VERSION}/library/ast.html#{node_class})'
             )
-            print(list_item, '-' * len(list_item), sep='\n')
+            print_header(list_item, '*')
 
             print(
                 '🌲 Path to this node from the root node of the AST:',
@@ -219,7 +219,7 @@ class NodeExplorer(ast.NodeVisitor):
 
             self._show_source_code(node)
             self._show_node_specific_fields(node)
-            print_section_divider()
+            print()
 
             if not self._prompt_user('Continue traversal?'):
                 print('🛑 Stopping traversal...')
@@ -227,7 +227,7 @@ class NodeExplorer(ast.NodeVisitor):
 
             if self._interactive:
                 print(f'🚀 Leaving {node_name} node...')
-                print_section_divider()
+                print()
 
     def generic_visit(self, node: ast.AST) -> None:
         """
@@ -245,7 +245,7 @@ class NodeExplorer(ast.NodeVisitor):
 
     def run(self) -> None:
         """Traverse the AST from the root to the leaves."""
-        print('✅ Ready to explore the AST!\n')
-        print_header('AST nodes encountered during depth-first traversal')
+        print('✅ Ready to explore the AST! Starting depth-first traversal...\n')
         self.visit(self.tree)
+        print_section_divider('*')
         print('🏆 Traversal completed!')
