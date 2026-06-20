@@ -76,6 +76,7 @@ class NodeExplorer(ast.NodeVisitor):
                     'nodes_to_explore must be a sequence of strings or AST classes, if not None'
                 )
 
+        self.stack: list[str] = []
         self._interactive = interactive
 
     def _prompt_user(self, prompt: str) -> bool:
@@ -148,7 +149,7 @@ class NodeExplorer(ast.NodeVisitor):
                     end='\n\n',
                 )
         except (AttributeError, TypeError):
-            print('📍 This node type does not have any line number information.\n')
+            print('\n📍 This node type does not have any line number information.\n')
 
     def _show_node_specific_fields(self, node: ast.AST) -> None:
         """
@@ -210,6 +211,12 @@ class NodeExplorer(ast.NodeVisitor):
             )
             print(list_item, '-' * len(list_item), sep='\n')
 
+            print(
+                '🌲 Path to this node from the root node of the AST:',
+                ' -> '.join(self.stack),
+                sep='\n   ',
+            )
+
             self._show_source_code(node)
             self._show_node_specific_fields(node)
             print_section_divider()
@@ -219,7 +226,7 @@ class NodeExplorer(ast.NodeVisitor):
                 raise SystemExit(0)
 
             if self._interactive:
-                print(f'🚀 Leaving {node_class} node...')
+                print(f'🚀 Leaving {node_name} node...')
                 print_section_divider()
 
     def generic_visit(self, node: ast.AST) -> None:
@@ -231,8 +238,10 @@ class NodeExplorer(ast.NodeVisitor):
         node : ast.AST
             The AST node to visit.
         """
+        self.stack.append(node.__class__.__name__)
         self._explore(node)
         super().generic_visit(node)
+        self.stack.pop()
 
     def run(self) -> None:
         """Traverse the AST from the root to the leaves."""
