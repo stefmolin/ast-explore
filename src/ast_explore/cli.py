@@ -5,7 +5,7 @@ import difflib
 from collections.abc import Sequence
 from typing import cast
 
-from .. import __version__, ast_node_types_generator
+from . import __version__, ast_node_types_generator
 from .explorer import NodeExplorer
 
 
@@ -53,7 +53,7 @@ def get_parser() -> argparse.ArgumentParser:
         The configured argument parser.
     """
     parser = argparse.ArgumentParser(
-        description='Traverse the AST of the input source code and explain the nodes encountered'
+        description='Traverse the AST of the input source code and explore the nodes encountered'
     )
 
     parser.add_argument(
@@ -70,8 +70,8 @@ def get_parser() -> argparse.ArgumentParser:
         '--types',
         nargs='*',
         help=(
-            'node types to explain (e.g., --types Try ExceptionHandler). '
-            "If you don't provide any specific types, all will be explained."
+            'node types to explore (e.g., --types Try ExceptionHandler). '
+            "If you don't provide any specific types, all will be explored."
         ),
         type=validate_node_type,
     )

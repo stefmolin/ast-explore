@@ -1,3 +1,3 @@
-# ast-explain
+# ast-explore
 
-Tools for explaining the AST of given Python source code.
+Tool for exploring the AST of given Python source code.

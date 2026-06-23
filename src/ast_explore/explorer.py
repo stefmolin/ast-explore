@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import cast
 
-from .. import PYTHON_VERSION, ast_node_types_generator
+from . import PYTHON_VERSION, ast_node_types_generator
 from .display import print_header, print_section_divider, print_source_code
 
 
