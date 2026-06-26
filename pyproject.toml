@@ -1,6 +1,6 @@
 [build-system]
-build-backend = "uv_build"
-requires = [ "uv-build>=0.11.2,<0.12.0" ]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
 
 [project]
 name = "ast-explore"
