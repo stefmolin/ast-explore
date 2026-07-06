@@ -20,7 +20,7 @@ repos:
         exclude: (\.(svg|png|pdf)$)|(CODE_OF_CONDUCT.md)
 
   - repo: https://github.com/numpy/numpydoc
-    rev: v1.10.0
+    rev: v1.11.0rc0
     hooks:
       - id: numpydoc-validation
         exclude: (tests|docs)/.*
@@ -45,7 +45,7 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.25.0
+    rev: v2.25.1
     hooks:
       - id: pyproject-fmt
         args: [--keep-full-version, --no-print-diff]
