@@ -1,0 +1,67 @@
+# This workflow builds ast-explore on Mac, Linux, and Windows for
+# multiple versions of Python to confirm it can be properly installed.
+#
+# Based on https://github.com/stefmolin/data-morph/blob/main/.github/workflows/ci.yml
+#
+# Author: Stefanie Molin
+
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '**'
+      - '!.github/**'
+      - '.github/workflows/ci.yml'
+
+  pull_request:
+    paths:
+      - '**'
+      - '!.github/**'
+      - '.github/workflows/ci.yml'
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build with Python ${{ matrix.python-version }} on ${{ matrix.os }}
+
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash -e {0}
+
+    strategy:
+        fail-fast: false
+        matrix:
+            os: [macos-latest, ubuntu-latest, windows-latest]
+            python-version: ["3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install ast-explore
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Check entry point
+        run: ast-explore --version
+
+      - name: Install dev dependencies
+        run: python -m pip install --group dev
+
+      - name: Run mypy
+        run: mypy src/
