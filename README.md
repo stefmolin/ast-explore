@@ -179,6 +179,9 @@ Here's an example of the result (there are no async functions in the file analyz
 🏆 Traversal completed!
 ```
 
+> [!TIP]
+> To exclude specific node types instead (for example, if you aren't sure yet, which type you want), use `--skip` instead of `--types`.
+
 ### Interactive mode
 
 Use interactive mode to step through the AST one node at a time:
