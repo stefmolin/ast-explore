@@ -4,7 +4,7 @@ requires = [ "hatchling" ]
 
 [project]
 name = "ast-explore"
-version = "0.2.0"
+version = "0.2.1"
 description = "Tool for exploring the AST of given Python source code."
 readme = "README.md"
 keywords = [
