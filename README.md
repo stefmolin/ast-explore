@@ -213,7 +213,7 @@ Here's what that looks like:
 ❓ Do you want more information on this node? [y]es [n]o [q]uit:
 ```
 
-Of course, you can combine `--interactive` with `--types` to customize your exploration. Here we interactively visit all `try` blocks:
+Of course, you can combine `--interactive` with `--types`/`--skip` to customize your exploration. Here, we interactively visit all `try` blocks:
 
 ```shell
 # previously-installed with pip:
