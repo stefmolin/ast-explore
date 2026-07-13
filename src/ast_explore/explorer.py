@@ -14,6 +14,52 @@ from . import PYTHON_VERSION, ast_node_types_generator
 from .display import print_header, print_section_divider, print_source_code
 
 
+def _process_node_types(
+    node_types: Sequence[str] | Sequence[type[ast.AST]] | None,
+    *,
+    default_to_empty: bool,
+) -> set[str]:
+    """
+    Process input node types into a set of validated node names.
+
+    Parameters
+    ----------
+    node_types : Sequence[str] | Sequence[type[ast.AST]] | None
+        The node types to process.
+    default_to_empty : bool
+        Whether the a value of ``None`` for ``node_types`` should be interpreted as
+        an empty set or a set of all possible node types.
+
+    Returns
+    -------
+    set[str]
+        The validated node names.
+
+    Raises
+    ------
+    TypeError
+        When ``node_types`` cannot be interpreted.
+    """
+    match node_types:
+        case None:
+            return set() if default_to_empty else set(ast_node_types_generator())
+        case [str(), *other_node_types] if all(
+            isinstance(node_type, str) for node_type in other_node_types
+        ):
+            return {
+                cast('str', node_type).removeprefix('ast.') for node_type in node_types
+            }
+        case [type(), *other_node_types] if all(
+            issubclass(cast('type', node_type), ast.AST)
+            for node_type in other_node_types
+        ):
+            return {cast('type', node_type).__name__ for node_type in node_types}
+        case _:
+            raise TypeError(
+                'node types must be a sequence of strings or AST classes, if not None'
+            )
+
+
 class NodeExplorer(ast.NodeVisitor):
     """
     Node visitor capable of interactively exploring nodes of the AST during traversal.
@@ -27,6 +73,8 @@ class NodeExplorer(ast.NodeVisitor):
         each node encountered. Provide a sequence of strings (*e.g.*, ``['Try', 'Assert']``)
         or :mod:`ast` types (*e.g.*, ``[ast.Try, ast.Assert]``) to only explore specific
         node types.
+    nodes_to_skip : Sequence[str] | Sequence[type[ast.AST]] | None, optional
+        The types of nodes to skip over. By default, none are skipped over.
     interactive : bool, default=False
         Whether to explore the AST interactively, in which case the traversal will stop
         to show you information about the node and wait for you to decide the next step.
@@ -36,6 +84,7 @@ class NodeExplorer(ast.NodeVisitor):
         self,
         source_code_file_path: str | os.PathLike[str],
         nodes_to_explore: Sequence[str] | Sequence[type[ast.AST]] | None,
+        nodes_to_skip: Sequence[str] | Sequence[type[ast.AST]] | None = None,
         interactive: bool = False,
     ) -> None:
         self._nodes_visited = itertools.count(1)
@@ -56,25 +105,9 @@ class NodeExplorer(ast.NodeVisitor):
             print('⚠️  Input source code is not syntactically-correct')
             raise
 
-        match nodes_to_explore:
-            case None:
-                self._nodes_to_explore = set(ast_node_types_generator())
-            case [str(), *other_node_types] if all(
-                isinstance(node_type, str) for node_type in other_node_types
-            ):
-                self._nodes_to_explore = {
-                    node_type.removeprefix('ast.') for node_type in nodes_to_explore
-                }
-            case [type(), *other_node_types] if all(
-                issubclass(node_type, ast.AST) for node_type in other_node_types
-            ):
-                self._nodes_to_explore = {
-                    cast('str', node_type.__name__) for node_type in nodes_to_explore
-                }
-            case _:
-                raise TypeError(
-                    'nodes_to_explore must be a sequence of strings or AST classes, if not None'
-                )
+        self._nodes_to_explore = _process_node_types(
+            nodes_to_explore, default_to_empty=False
+        ) - _process_node_types(nodes_to_skip, default_to_empty=True)
 
         self.stack: list[str] = []
         self._interactive = interactive
@@ -246,6 +279,15 @@ class NodeExplorer(ast.NodeVisitor):
     def run(self) -> None:
         """Traverse the AST from the root to the leaves."""
         print('✅ Ready to explore the AST! Starting depth-first traversal...\n')
+
         self.visit(self.tree)
+
         print_section_divider('*')
-        print('🏆 Traversal completed!')
+
+        if next(self._nodes_visited) > 1:
+            print('🏆 Traversal completed!')
+        else:
+            print(
+                '📭 Did not encounter any of the requested node type(s): '
+                f'{", ".join(self._nodes_to_explore)}'
+            )

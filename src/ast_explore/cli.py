@@ -67,7 +67,22 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        '-i',
+        '--interactive',
+        action='store_true',
+        help=(
+            'whether to run in interactive mode, which allows the user to decide '
+            'whether they want to visit a given node'
+        ),
+    )
+
+    node_type_group = parser.add_argument_group(
+        'node type specification (mutually-exclusive)'
+    ).add_mutually_exclusive_group()
+    node_type_group.add_argument(
+        '-t',
         '--types',
+        metavar='TYPE',
         nargs='*',
         help=(
             'node types to explore (e.g., --types Try ExceptionHandler). '
@@ -75,14 +90,16 @@ def get_parser() -> argparse.ArgumentParser:
         ),
         type=validate_node_type,
     )
-
-    parser.add_argument(
-        '--interactive',
-        action='store_true',
+    node_type_group.add_argument(
+        '-x',
+        '--skip',
+        metavar='TYPE',
+        nargs='*',
         help=(
-            'whether to run in interactive mode, which allows the user to decide '
-            'whether they want to visit a given node.'
+            'node types to skip over (e.g., --skip Module). '
+            "If you don't provide any specific types, none will be skipped over."
         ),
+        type=validate_node_type,
     )
 
     return parser
@@ -105,7 +122,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = get_parser().parse_args(argv)
 
     try:
-        visitor = NodeExplorer(args.source_code_file_path, args.types, args.interactive)
+        visitor = NodeExplorer(
+            args.source_code_file_path, args.types, args.skip, args.interactive
+        )
     except (FileNotFoundError, SyntaxError):
         return 1
     except Exception as exc:
