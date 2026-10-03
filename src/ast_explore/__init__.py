@@ -20,15 +20,15 @@ def ast_node_types_generator() -> Iterator[str]:
     Iterator[str]
         Names of each of the AST node types.
     """
-    seen = set()
+    seen: set[type[ast.AST]] = set()
 
-    def subclass_generator(base_class: type) -> Iterator[str]:
+    def subclass_generator(base_class: type[ast.AST]) -> Iterator[str]:
         """
         Generator for getting the names of all of a class's subclasses recursively.
 
         Parameters
         ----------
-        base_class : type
+        base_class : type[ast.AST]
             The class for which to grab all subclasses.
 
         Yields
