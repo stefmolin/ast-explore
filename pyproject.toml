@@ -7,16 +7,9 @@ name = "ast-explore"
 version = "0.2.1"
 description = "Tool for exploring the AST of given Python source code."
 readme = "README.md"
-keywords = [
-  "ast",
-  "ast explainer",
-  "ast explorer",
-  "ast viewer",
-]
+keywords = [ "ast", "ast explainer", "ast explorer", "ast viewer" ]
 license = { file = "LICENSE" }
-authors = [
-  { name = "Stefanie Molin", email = "ast-explore@stefaniemolin.com" },
-]
+authors = [ { name = "Stefanie Molin", email = "ast-explore@stefaniemolin.com" } ]
 requires-python = ">=3.11"
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -27,6 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
 ]
 dependencies = []
 urls.Documentation = "https://github.com/stefmolin/ast-explore"
@@ -35,10 +29,7 @@ urls.Source = "https://github.com/stefmolin/ast-explore"
 scripts.ast-explore = "ast_explore.cli:main"
 
 [dependency-groups]
-dev = [
-  "mypy>=2.2.0",
-  "pre-commit>=4.6.0",
-]
+dev = [ "mypy>=2.3.0", "pre-commit>=4.6.0" ]
 
 [tool.ruff]
 line-length = 88
@@ -74,10 +65,9 @@ lint.ignore = [
   "E501",   # line-too-long
   "TRY003", # raise-vanilla-args
 ]
-lint.extend-per-file-ignores."tests/*" = [ "ANN" ]  # don't require annotations for tests
-lint.isort.known-first-party = [
-  "ezslides",
-]
+lint.extend-per-file-ignores."tests/*" = [
+  "ANN",
+]  # don't require annotations for tests
 lint.isort.split-on-trailing-comma = false
 
 [tool.mypy]
@@ -93,12 +83,14 @@ checks = [
   "SA01", # or a see also section
   "SS06", # and don't require the summary to fit on one line
 ]
-exclude = [  # don't report on checks for these
+exclude = [
+  # don't report on checks for these
   "\\.__init__$",
   "\\.__repr__$",
   "\\.__str__$",
 ]
-override_SS05 = [  # allow docstrings to start with these words
+override_SS05 = [
+  # allow docstrings to start with these words
   "^Process ",
   "^Assess ",
   "^Access ",
