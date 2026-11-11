@@ -63,7 +63,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         metavar='source_code',
         dest='source_code_file_path',
-        help='Source code file to analyze',
+        help='source code file to analyze',
     )
 
     parser.add_argument(
